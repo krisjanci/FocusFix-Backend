@@ -24,7 +24,7 @@ print("Does the file exist?", data_file.exists())
 
 
 """ Loading the spreadsheet data """
-data = panda.read_excel(
+data = pandas.read_excel(
     data_file,
     sheet_name = "SWELLdata",
 )
