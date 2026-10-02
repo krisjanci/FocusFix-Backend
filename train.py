@@ -44,3 +44,25 @@ features = [
 target = "NasaTLX"
 
 print(data[features + [target]].head(10))
+
+
+""" Clean data """
+work = data[
+    data["Condition"].isin(["N","I","T"]) # N = neutral, I = interaptions, T = time pressure
+].copy()
+
+required_columns = [
+    "PP",
+    "Blok",
+    "Condition",
+] + features + [target]
+
+print("Missing values:")
+print(work[required_columns].isna().sum())
+
+clean = work.dropna(
+    subset = required_columns
+).copy()
+
+print("Work rows before cleaning:", len(work))
+print("Work rows after cleaning:", len(clean))
