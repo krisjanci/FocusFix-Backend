@@ -104,3 +104,9 @@ blocks = (
 print(blocks.head())
 print("Work blocks:", len(blocks))
 print("Participants:", blocks["PP"].nunique())
+
+
+""" Seperate cues from answers """
+X = blocks[features] # activity inputs
+y = blocks[target] # worload answers
+
