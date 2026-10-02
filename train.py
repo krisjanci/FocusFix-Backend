@@ -66,3 +66,23 @@ clean = work.dropna(
 
 print("Work rows before cleaning:", len(work))
 print("Work rows after cleaning:", len(clean))
+
+""" Check if each block's rating is consistent """
+group_columns = ["PP", "Blok", "Condition"]
+
+rating_counts = (
+    work.groupby(group_columns)[target].nunique()
+)
+
+if (rating_counts > 1).any():
+    raise ValueError(
+        "A block contains a different workload ratings. Inspect the data."
+    )
+
+
+"""  """
+activity = (
+    clean.groupby(group_columns)[features].mean()
+    )
+
+
