@@ -80,9 +80,27 @@ if (rating_counts > 1).any():
     )
 
 
-"""  """
+""" Building block table """
 activity = (
-    clean.groupby(group_columns)[features].mean()
+    clean.groupby(group_columns)[features]
+    .mean()
     )
+ratings = (
+    clean.groupby(group_columns)[target]
+    .first()
+)
+minutes = (
+    clean.groupby(group_columns)
+    .size()
+    .rename("minutes_used")
+)
+blocks = (
+    activity
+    .join(ratings)
+    .join(minutes)
+    .reset_index()
+)
 
-
+print(blocks.head())
+print("Work blocks:", len(blocks))
+print("Participants:", blocks["PP"].nunique())
