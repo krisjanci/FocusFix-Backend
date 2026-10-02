@@ -31,3 +31,16 @@ data = pandas.read_excel(
 
 print("Rows and columns:", data.shape)
 print(data.head())
+
+
+""" Choosing cues and target """
+features = [
+    "SnKeyStrokes",
+    "SnErrorKeys",
+    "SnLeftClicked",
+    "SnAppChange"
+    ]
+
+target = "NasaTLX"
+
+print(data[features + [target]].head(10))
