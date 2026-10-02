@@ -110,3 +110,14 @@ print("Participants:", blocks["PP"].nunique())
 X = blocks[features] # activity inputs
 y = blocks[target] # worload answers
 
+
+""" Always leaving out one person to predict workload """
+splitter = LeaveOneGroupOut()
+
+results = blocks[
+    group_columns + [target]
+].copy()
+
+results["prediction"] = float("nan")
+results["baseline"] = float("nan")
+
