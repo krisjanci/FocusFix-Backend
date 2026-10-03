@@ -126,7 +126,7 @@ results["baseline"] = float("nan")
 for train_rows, test_rows in splitter.split(
     X,
     y,
-    groups=blocks("PP"),
+    groups=blocks["PP"],
 ):
     X_train = X.iloc[train_rows]
     X_test = X.iloc[test_rows]
