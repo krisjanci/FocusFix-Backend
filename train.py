@@ -146,3 +146,24 @@ for train_rows, test_rows in splitter.split(
     results.loc[test_rows, "prediction"] = predictions
     results.loc[test_rows, "baseline_prediction"] = baseline_predictions
 
+
+""" Evaluate the model by measuring the mistakes """
+if results[["prediction","baseline"]].isna().any().any():
+    raise ValueError("Some predictions are missing.")
+
+model_error = mean_absolute_error(
+    results[target], 
+    results["prediction"]
+)
+baseline_error = mean_absolute_error(
+    results[target],
+    results["baseline"]
+)
+
+print("Model MAE:", round(model_error, 3))
+print("Baseline MAE:", round(baseline_error, 3))
+
+if model_error < baseline_error:
+    print("The model beat the baseline.")
+else:
+    print("The model did not beat the baseline.")
