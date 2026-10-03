@@ -16,3 +16,11 @@
 
 [ ] Make the training code customizable to the ML method used.
 
+### Method
+
+[ ] Make a self written spreadsheet of the 10 most relevant ML algorithms. Include a quick overview, pros and cons, and additional notes.
+
+[ ] Train a few methods and make a spreadsheet with each result.
+
+[ ] Evaluate if using the mean is a good baseline to use.
+
