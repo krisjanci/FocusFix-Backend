@@ -144,7 +144,7 @@ for train_rows, test_rows in splitter.split(
     baseline_predictions = baseline.predict(X_test)
 
     results.loc[test_rows, "prediction"] = predictions
-    results.loc[test_rows, "baseline_prediction"] = baseline_predictions
+    results.loc[test_rows, "baseline"] = baseline_predictions
 
 
 """ Evaluate the model by measuring the mistakes """
