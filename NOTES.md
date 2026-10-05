@@ -29,3 +29,10 @@ Failure to beat the baseline may mean:
 
 - Would hard coding a path in my public repository pose a security risk to my private data?
 - https://numpy.org/ - machine learning library suggested by issei
+- Why do I need these: 
+
+from sklearn.base import clone # makes a clean copy of a model
+
+from sklearn.pipeline import make_pipeline # connects scaling and a model into one unit
+
+from sklearn.preprocessing import StandardScaler # puts differently sized features on comparable scales
