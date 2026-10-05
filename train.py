@@ -119,6 +119,18 @@ y = blocks[target] # worload answers
 """ Always leaving out one person to predict workload """
 splitter = LeaveOneGroupOut()
 
+
+""" Models available for testing """
+models = {
+    "linear_regression": LinearRegression(),
+    "ridge_regression": make_pipeline( # creates an ordered process
+        StandardScaler(), # rescales input so they're comparable
+        Ridge(alpha=1.0) # alpha controls how strongly Ridge prevents extreme coefficients
+    )
+}
+
+
+
 results = blocks[
     group_columns + [target]
 ].copy()
