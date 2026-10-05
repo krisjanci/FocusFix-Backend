@@ -167,3 +167,41 @@ if model_error < baseline_error:
     print("The model beat the baseline.")
 else:
     print("The model did not beat the baseline.")
+
+
+""" Save experiment results """
+artifacts_folder = backend_folder / "artifacts"
+metrics_folder = artifacts_folder / "metrics"
+models_folder = artifacts_folder / "models"
+predictions_folder = artifacts_folder / "predictions"
+
+results.to_csv(predictions_folder / "held_out_predictions.csv",
+            index = False
+            )
+
+metrics = pandas.DataFrame(
+    [
+        {
+            "participants": blocks["PP"].nunique(),
+            "work_blocks": len(blocks),
+            "model_mae": model_error,
+            "baseline_mae": baseline_error,
+            "beat_baseline": model_error < baseline_error
+        }
+    ]
+)
+
+metrics.to_csv(
+    metrics_folder / "baseline_metrics.csv",
+    index=False
+)
+
+final_model = LinearRegression()
+final_model.fit(X,y)
+
+joblib.dump(
+    final_model,
+    models_folder / "workload_model.joblib"
+)
+
+print("The results and final model were saved.")
