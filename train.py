@@ -190,10 +190,10 @@ baseline_error = mean_absolute_error(
 metrics_rows = [
     {
         "model": "dummy_mean_baseline",
-        "paricipants": blocks["PP"].nunique(),
+        "participants": blocks["PP"].nunique(),
         "work_blocks": len(blocks),
         "mae": baseline_error,
-        "baseline_error": baseline_error,
+        "baseline_mae": baseline_error,
         "beat_baseline": False
     }
 ]
