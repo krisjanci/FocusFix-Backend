@@ -3,12 +3,12 @@ from pathlib import Path   # to find files
 import pandas   # to work with tables
 import joblib   # to save and load my trained models
 
-from sklearn.base import clone
-from sklearn.linear_model import LinearRegression, Ridge
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.svm import SVR
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
+from sklearn.base import clone # makes a clean copy of a model
+from sklearn.linear_model import LinearRegression, Ridge # imports the Linear and Ridge models
+from sklearn.ensemble import RandomForestRegressor # imports Random Forrest model
+from sklearn.svm import SVR # imports the support vector model
+from sklearn.pipeline import make_pipeline # connects scaling and a model into one unit
+from sklearn.preprocessing import StandardScaler # puts differently sized features on comparable scales
 from sklearn.dummy import DummyRegressor   # imports a prediction tool for my model to compete against
 from sklearn.model_selection import LeaveOneGroupOut   # tool for seperating training data and testing data
 from sklearn.metrics import mean_absolute_error   # tool for measuring how far my preediction is from reality on average
