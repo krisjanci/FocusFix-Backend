@@ -7,6 +7,11 @@ Tested Linear Regression model and it did not beat a Mean Baseline in predicting
 Model MAE was: 13.246
 Baseline MAE was: 12.103
 
+### Ridge Regression
+
+### Random Forest Regression
+
+### Support Vector Regression
 
 ## Questions
 
