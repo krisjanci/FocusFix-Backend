@@ -165,7 +165,7 @@ for train_rows, test_rows in splitter.split(
 
     # test every ML model in the dictionary 
     for model_name, model_template in models.items():
-        model.clone(model_template)
+        model = clone(model_template)
 
         model.fit(X_train, y_train)
         predictions = model.predict(X_test)
