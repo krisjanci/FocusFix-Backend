@@ -141,30 +141,39 @@ for model_name in models:
     results[model_name] = float("nan")
 
 
-""" Create ML model and a baseline model to compare against """
+""" Test every model on the missing person"""
 for train_rows, test_rows in splitter.split(
     X,
     y,
-    groups=blocks["PP"],
+    groups=blocks["PP"]
 ):
     X_train = X.iloc[train_rows]
     X_test = X.iloc[test_rows]
 
     y_train = y.iloc[train_rows]
 
-    model = LinearRegression() # create an untrained model
-    model.fit(X_train, y_train) # learn the relationship between activity and workload
-
-    predictions = model.predict(X_test) # use the relationship to predict the missing person's workload score
-
+    # test the mean baseline
     baseline = DummyRegressor(strategy="mean")
     baseline.fit(X_train, y_train)
 
     baseline_predictions = baseline.predict(X_test)
 
-    results.loc[test_rows, "prediction"] = predictions
-    results.loc[test_rows, "baseline"] = baseline_predictions
+    results.loc[
+        test_rows,
+        "baseline",
+    ] = baseline_predictions
 
+    # test every ML model in the dictionary 
+    for model_name, model_template in models.items():
+        model.clone(model_template)
+
+        model.fit(X_train, y_train)
+        predictions = model.predict(X_test)
+
+        results.loc[
+            test_rows,
+            model_name,
+        ] = predictions
 
 """ Evaluate the model by measuring the mistakes """
 if results[["prediction","baseline"]].isna().any().any():
