@@ -1,19 +1,31 @@
-## Notes
+# Notes
 
-### Linear Regression
+## Linear Regression
 
 Tested Linear Regression model and it did not beat a Mean Baseline in predicting NasaTLX scores with the four selected features: Keystrokes, Error-key presses, Left clicks and Application changes.
 
 Model MAE was: 13.246
 Baseline MAE was: 12.103
 
-### Ridge Regression
+### Failure Hypothesis
 
-### Random Forest Regression
+Failure to beat the baseline may mean:
 
-### Support Vector Regression
+- the relationship between the 4 features and NasaTLX scores is non-linear
 
-## Questions
+- four activity features are not sufficient
+
+- NasaTLX score vary widely between people
+
+
+## Ridge Regression
+
+## Random Forest Regression
+
+## Support Vector Regression
+
+
+# Questions
 
 - Would hard coding a path in my public repository pose a security risk to my private data?
 - https://numpy.org/ - machine learning library suggested by issei
