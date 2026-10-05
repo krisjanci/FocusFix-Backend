@@ -126,6 +126,16 @@ models = {
     "ridge_regression": make_pipeline( # creates an ordered process
         StandardScaler(), # rescales input so they're comparable
         Ridge(alpha=1.0) # alpha controls how strongly Ridge prevents extreme coefficients
+    ),
+    "random_forest": RandomForestRegressor(
+        n_estimators=200, # builds 200 decision trees
+        max_depth=3, # allows each tree to ask no more than 3 levels of questions
+        min_samples_leaf=3, # every final branch must contain at least three training examples
+        random_state=42 # makes it use the same randomness every time, so repeated runs produce the same result
+    ),
+    "support_vector_regression": make_pipeline(
+        StandardScaler(),
+        SVR()
     )
 }
 
