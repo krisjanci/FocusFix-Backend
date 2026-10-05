@@ -175,26 +175,62 @@ for train_rows, test_rows in splitter.split(
             model_name,
         ] = predictions
 
-""" Evaluate the model by measuring the mistakes """
-if results[["prediction","baseline"]].isna().any().any():
+
+""" Evaluate every model by measuring its mistakes """
+prediction_columns = ["baseline"] + list(models.keys)
+
+if results[prediction_columns].isna().any().any():
     raise ValueError("Some predictions are missing.")
 
-model_error = mean_absolute_error(
-    results[target], 
-    results["prediction"]
-)
 baseline_error = mean_absolute_error(
     results[target],
     results["baseline"]
 )
 
-print("Model MAE:", round(model_error, 3))
+metrics_rows = [
+    {
+        "model": "dummy_mean_baseline",
+        "paricipants": blocks["PP"].nunique(),
+        "work_blocks": len(blocks),
+        "mae": baseline_error,
+        "baseline_error": baseline_error,
+        "beat_baseline": False
+    }
+]
+
+print()
+print("Model Comparison")
+print("----------------")
 print("Baseline MAE:", round(baseline_error, 3))
 
-if model_error < baseline_error:
-    print("The model beat the baseline.")
-else:
-    print("The model did not beat the baseline.")
+for model_name in models:
+    model_error = mean_absolute_error(
+        results[target],
+        results[model_name]
+    )
+
+    beat_baseline = model_error < baseline_error
+
+    metrics_rows.append(
+        {
+            "model": model_name,
+            "participants": blocks["PP"].nunique(),
+            "work_blocks": len(blocks),
+            "mae": model_error,
+            "baseline_mae": baseline_error,
+            "beat_baseline": beat_baseline
+        }
+    )
+
+print(
+    model_name,
+    "MAE:",
+    round(model_error,3)
+    "| Beat baseline:",
+    beat_baseline
+)
+
+metrics = pandas.DataFrame(metrics_rows)
 
 
 """ Save experiment results """
