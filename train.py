@@ -130,13 +130,15 @@ models = {
 }
 
 
-
+""" Prepare a place to store every models prediction """
 results = blocks[
     group_columns + [target]
 ].copy()
 
-results["prediction"] = float("nan")
 results["baseline"] = float("nan")
+
+for model_name in models:
+    results[model_name] = float("nan")
 
 
 """ Create ML model and a baseline model to compare against """
