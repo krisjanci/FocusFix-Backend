@@ -222,13 +222,13 @@ for model_name in models:
         }
     )
 
-print(
-    model_name,
-    "MAE:",
-    round(model_error,3),
-    "| Beat baseline:",
-    beat_baseline
-)
+    print(
+        model_name,
+        "MAE:",
+        round(model_error,3),
+        "| Beat baseline:",
+        beat_baseline
+    )
 
 metrics = pandas.DataFrame(metrics_rows)
 
