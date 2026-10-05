@@ -177,7 +177,7 @@ for train_rows, test_rows in splitter.split(
 
 
 """ Evaluate every model by measuring its mistakes """
-prediction_columns = ["baseline"] + list(models.keys)
+prediction_columns = ["baseline"] + list(models.keys())
 
 if results[prediction_columns].isna().any().any():
     raise ValueError("Some predictions are missing.")
