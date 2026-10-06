@@ -20,6 +20,14 @@ Failure to beat the baseline may mean:
 
 ## Ridge Regression
 
+### Failure Hypothesis 
+
+- NasaTLX score vary widely between people
+
+- I averaged minutes instead of looking at how each person progressed
+
+(Problem) NasaTLX score was per block
+
 ## Random Forest Regression
 
 ## Support Vector Regression
@@ -36,3 +44,10 @@ from sklearn.base import clone # makes a clean copy of a model
 from sklearn.pipeline import make_pipeline # connects scaling and a model into one unit
 
 from sklearn.preprocessing import StandardScaler # puts differently sized features on comparable scales
+
+
+## meeting notes
+
+auto ML - FLAML (microsoft)
+
+per projects ml 
