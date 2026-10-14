@@ -51,3 +51,7 @@ from sklearn.preprocessing import StandardScaler # puts differently sized featur
 auto ML - FLAML (microsoft)
 
 per projects ml 
+
+### mini meeting notes
+
+- check app/server functionality from synthetically generated data
