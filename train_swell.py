@@ -21,17 +21,17 @@ def main():
     parser.add_argument("--output", type=Path, default=Path("artifacts/swell"))
     args = parser.parse_args()
     data_file = args.data
-    
+
     """ Loading the spreadsheet data """
     data = pandas.read_excel(
         data_file,
         sheet_name = "SWELLdata",
     )
-    
+
     print("Rows and columns:", data.shape)
     print(data.head())
-    
-    
+
+
     """ Choosing cues and target """
     features = [
         "SnKeyStrokes",
@@ -39,46 +39,46 @@ def main():
         "SnLeftClicked",
         "SnAppChange"
         ]
-    
+
     target = "NasaTLX"
-    
+
     print(data[features + [target]].head(10))
-    
-    
+
+
     """ Clean data """
     work = data[
         data["Condition"].isin(["N","I","T"]) # N = neutral, I = interaptions, T = time pressure
     ].copy()
-    
+
     required_columns = [
         "PP",
         "Blok",
         "Condition",
     ] + features + [target]
-    
+
     print("Missing values:")
     print(work[required_columns].isna().sum())
-    
+
     clean = work.dropna(
         subset = required_columns
     ).copy()
-    
+
     print("Work rows before cleaning:", len(work))
     print("Work rows after cleaning:", len(clean))
-    
+
     """ Check if each block's rating is consistent """
     group_columns = ["PP", "Blok", "Condition"]
-    
+
     rating_counts = (
         work.groupby(group_columns)[target].nunique()
     )
-    
+
     if (rating_counts > 1).any():
         raise ValueError(
             "A block contains a different workload ratings. Inspect the data."
         )
-    
-    
+
+
     """ Building block table """
     activity = (
         clean.groupby(group_columns)[features]
@@ -99,21 +99,21 @@ def main():
         .join(minutes)
         .reset_index()
     )
-    
+
     print(blocks.head())
     print("Work blocks:", len(blocks))
     print("Participants:", blocks["PP"].nunique())
-    
-    
+
+
     """ Seperate cues from answers """
     X = blocks[features] # activity inputs
     y = blocks[target] # worload answers
-    
-    
+
+
     """ Always leaving out one person to predict workload """
     splitter = LeaveOneGroupOut()
-    
-    
+
+
     """ Models available for testing """
     models = {
         "linear_regression": LinearRegression(),
@@ -132,19 +132,19 @@ def main():
             SVR()
         )
     }
-    
-    
+
+
     """ Prepare a place to store every models prediction """
     results = blocks[
         group_columns + [target]
     ].copy()
-    
+
     results["baseline"] = float("nan")
-    
+
     for model_name in models:
         results[model_name] = float("nan")
-    
-    
+
+
     """ Test every model on the missing person"""
     for train_rows, test_rows in splitter.split(
         X,
@@ -153,44 +153,44 @@ def main():
     ):
         X_train = X.iloc[train_rows]
         X_test = X.iloc[test_rows]
-    
+
         y_train = y.iloc[train_rows]
-    
+
         # test the mean baseline
         baseline = DummyRegressor(strategy="mean")
         baseline.fit(X_train, y_train)
-    
+
         baseline_predictions = baseline.predict(X_test)
-    
+
         results.loc[
             test_rows,
             "baseline",
         ] = baseline_predictions
-    
-        # test every ML model in the dictionary 
+
+        # test every ML model in the dictionary
         for model_name, model_template in models.items():
             model = clone(model_template)
-    
+
             model.fit(X_train, y_train)
             predictions = model.predict(X_test)
-    
+
             results.loc[
                 test_rows,
                 model_name,
             ] = predictions
-    
-    
+
+
     """ Evaluate every model by measuring its mistakes """
     prediction_columns = ["baseline"] + list(models.keys())
-    
+
     if results[prediction_columns].isna().any().any():
         raise ValueError("Some predictions are missing.")
-    
+
     baseline_error = mean_absolute_error(
         results[target],
         results["baseline"]
     )
-    
+
     metrics_rows = [
         {
             "model": "dummy_mean_baseline",
@@ -201,20 +201,20 @@ def main():
             "beat_baseline": False
         }
     ]
-    
+
     print()
     print("Model Comparison")
     print("----------------")
     print("Baseline MAE:", round(baseline_error, 3))
-    
+
     for model_name in models:
         model_error = mean_absolute_error(
             results[target],
             results[model_name]
         )
-    
+
         beat_baseline = model_error < baseline_error
-    
+
         metrics_rows.append(
             {
                 "model": model_name,
@@ -225,7 +225,7 @@ def main():
                 "beat_baseline": beat_baseline
             }
         )
-    
+
         print(
             model_name,
             "MAE:",
@@ -233,42 +233,42 @@ def main():
             "| Beat baseline:",
             beat_baseline
         )
-    
+
     metrics = pandas.DataFrame(metrics_rows)
-    
-    
+
+
     """ Save experiment results """
     artifacts_folder = args.output
     metrics_folder = artifacts_folder / "metrics"
     models_folder = artifacts_folder / "models"
     predictions_folder = artifacts_folder / "predictions"
-    
+
     for folder in (metrics_folder, models_folder, predictions_folder):
         folder.mkdir(parents=True, exist_ok=True)
-    
+
     # Held out predictions
     results.to_csv(
         predictions_folder / "held_out_predictions.csv",
         index=False
     )
-    
+
     # Model comparison
     metrics.to_csv(
         metrics_folder / "model_comparison.csv",
         index=False
     )
-    
+
     # train final versions
-    
+
     for model_name, model_template in models.items():
         final_model = clone(model_template)
         final_model.fit(X,y)
-    
+
         joblib.dump(
             final_model,
             models_folder / f"{model_name}.joblib"
         )
-    
+
     print("The comparison results and final models were saved.")
 
 if __name__ == "__main__":
