@@ -112,3 +112,13 @@ def test_exclusion_audit_and_window_validation(recording):
     assert table.empty and "finished" in audit[0]["excluded_session"]
     with pytest.raises(ValueError, match="Window"):
         prepare(recording, participant_id="person", window_seconds=float("nan"))
+
+
+def test_csv_timestamp_rounding(recording):
+    metadata = recording / "session.json"
+    value = json.loads(metadata.read_text()); value["duration_seconds"] = 1199.9999996
+    metadata.write_text(json.dumps(value))
+    surveys = pd.read_csv(recording / "surveys.csv")
+    surveys.loc[3, "answered_elapsed_seconds"] = 1200
+    surveys.to_csv(recording / "surveys.csv", index=False)
+    assert len(load_session(recording, "person")[1]) == 4
