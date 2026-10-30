@@ -122,7 +122,7 @@ def load_session(folder, participant_id, window_seconds=300):
     for table, columns in [(events, ["elapsed_seconds"]), (mouse, ["start_seconds", "end_seconds", "distance_screen_points", "movement_events"])]:
         if table[columns].isna().any().any() or (table[columns] < 0).any().any():
             raise ValueError("Missing or negative activity measurements")
-    if (events.elapsed_seconds > duration).any() or (mouse.end_seconds > duration).any():
+    if (events.elapsed_seconds > duration + 1e-6).any() or (mouse.end_seconds > duration + 1e-6).any():
         raise ValueError("Activity extends beyond session duration")
     if (events.key_hold_seconds.dropna() < 0).any():
         raise ValueError("Negative key hold duration")
@@ -141,8 +141,11 @@ def load_session(folder, participant_id, window_seconds=300):
         ratings = surveys[target].dropna()
         if ((ratings < 0) | (ratings > 10) | (ratings % 1 != 0)).any():
             raise ValueError(f"Invalid rating: {target}")
-    if surveys[["shown_elapsed_seconds", "answered_elapsed_seconds"]].isna().any().any() or (surveys.shown_elapsed_seconds > surveys.answered_elapsed_seconds).any() or (surveys.answered_elapsed_seconds > duration).any():
+    if surveys[["shown_elapsed_seconds", "answered_elapsed_seconds"]].isna().any().any() or (surveys.shown_elapsed_seconds > surveys.answered_elapsed_seconds).any() or (surveys.answered_elapsed_seconds > duration + 1e-6).any():
         raise ValueError("Invalid survey timing")
+    answered = surveys.loc[surveys.status == "answered"]
+    if answered.fatigue_0_10.isna().any() or answered.loc[answered.context != "session_start", "productivity_0_10"].isna().any() or surveys.loc[surveys.context == "session_start", "productivity_0_10"].notna().any():
+        raise ValueError("Answered surveys require fatigue and work productivity; starting productivity must be blank")
     if surveys.loc[surveys.status != "answered", TARGETS].notna().any().any():
         raise ValueError("Unanswered surveys must have blank ratings")
     rows, skipped = [], 0
