@@ -54,7 +54,7 @@ def read_table(folder, name, columns, numeric):
     if missing:
         raise ValueError(f"{name}: missing columns {sorted(missing)}")
     for column in numeric:
-        original = table[column].replace("", np.nan)
+        original = table[column].mask(table[column] == "", np.nan)
         table[column] = pd.to_numeric(original, errors="raise")
         if np.isinf(table[column].to_numpy(dtype=float)).any():
             raise ValueError(f"{name}: infinite {column}")
@@ -101,8 +101,8 @@ def window_features(events, mouse, cutoff, window_seconds=300):
 
 def load_session(folder, participant_id, window_seconds=300):
     metadata = json.loads((folder / "session.json").read_text())
-    if metadata.get("schema_version") != 8:
-        raise ValueError("Only recording schema 8 is supported; older surveys have different meanings")
+    if metadata.get("schema_version") not in (5, 6, 7, 8):
+        raise ValueError("Only recording schemas 5–8 are supported; older surveys have different meanings")
     if metadata.get("check_in_version") != "focusfix_check_in_v2":
         raise ValueError("Only focusfix_check_in_v2 ratings are supported")
     duration = metadata.get("duration_seconds")
@@ -162,8 +162,10 @@ def load_session(folder, participant_id, window_seconds=300):
     return session_id, rows, skipped
 
 
-def prepare(source, participant_id=None, manifest=None, window_seconds=300):
+def prepare(source, participant_id=None, manifest=None, window_seconds=300, skip_invalid=False):
     """Manifest CSV maps session_id to pseudonymous participant_id across all sessions."""
+    if not np.isfinite(window_seconds) or window_seconds < 30:
+        raise ValueError("Window must be finite and at least 30 seconds")
     if bool(participant_id) == bool(manifest):
         raise ValueError("Supply exactly one of --participant-id or --manifest")
     identities = None
@@ -186,8 +188,11 @@ def prepare(source, participant_id=None, manifest=None, window_seconds=300):
                 raise ValueError(f"Manifest has no participant for session {identity}")
             try:
                 identity, examples, skipped = load_session(path.parent, identities[identity] if identities is not None else participant_id, window_seconds)
-            except (ValueError, KeyError) as error:
-                raise ValueError(f"Session {identity}: {error}") from error
+            except (ValueError, KeyError, OSError) as error:
+                if not skip_invalid:
+                    raise ValueError(f"Session {identity}: {error}") from error
+                report.append({"session_id": identity, "training_rows": 0, "excluded_session": str(error)})
+                continue
             rows.extend(examples)
-            report.append({"session_id": identity, "training_rows": len(examples), "excluded_check_ins": skipped})
+            report.append({"session_id": identity, "training_rows": len(examples), "excluded_check_ins": skipped, "synthetic": bool(json.loads(path.read_text()).get("synthetic", False))})
     return pd.DataFrame(rows, columns=["participant_id", "session_id", "check_in_id"] + FEATURES + TARGETS), report
