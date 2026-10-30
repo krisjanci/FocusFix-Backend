@@ -17,6 +17,7 @@ def main(argv=None):
         identity = command.add_mutually_exclusive_group(required=True)
         identity.add_argument("--participant-id", help="Pseudonym for all recordings from ONE person")
         identity.add_argument("--manifest", type=Path, help="CSV mapping session_id,participant_id")
+        command.add_argument("--skip-invalid", action="store_true", help="Exclude invalid/older/unfinished sessions, recording reasons in ingestion.json")
         command.add_argument("--window-seconds", type=float, default=300)
         command.add_argument("--output", type=Path, required=True)
     training = commands.choices["train"]
@@ -35,7 +36,7 @@ def main(argv=None):
             report = train_models(table, args.output / "models", synthetic=True)
             print(json.dumps(report, indent=2))
             return
-        table, ingest = prepare(args.source, args.participant_id, args.manifest, args.window_seconds)
+        table, ingest = prepare(args.source, args.participant_id, args.manifest, args.window_seconds, args.skip_invalid)
         if args.command == "prepare":
             if args.output.exists() and any(args.output.iterdir()):
                 raise ValueError("Output must be new or empty")
@@ -45,7 +46,7 @@ def main(argv=None):
             print(f"Prepared {len(table)} labelled windows from {len(ingest)} sessions in {args.output}")
         else:
             report = train_models(table, args.output, args.group_by, args.models,
-                                  not args.no_coreml, args.window_seconds)
+                                  not args.no_coreml, args.window_seconds, synthetic=any(item.get("synthetic", False) for item in ingest))
             (args.output / "ingestion.json").write_text(json.dumps(ingest, indent=2) + "\n")
             for target, result in report["targets"].items():
                 print(f"{target}: {result['selected_model']}; test error {result['test_mae']:.3f}/10; average-only error {result['baseline_test_mae']:.3f}/10")
