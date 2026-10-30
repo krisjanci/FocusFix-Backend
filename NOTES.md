@@ -55,3 +55,8 @@ per projects ml
 ### mini meeting notes
 
 - check app/server functionality from synthetically generated data
+## Backend implementation — October 30, 2026
+
+The app now has its own ingestion/training/export workflow. See README.md for commands, MODEL_GUIDE.md for plain-language decisions, DATA_CATALOG.md for research data suitability, and VALIDATION.md for measured results. The original SWELL experiment remains available as train_swell.py.
+
+Five real local work check-ins were usable. The personal-session pilot selected the mean benchmark for both targets; more labelled data is needed before claiming accuracy. Synthetic data verifies the pipeline separately. Core ML conversion and native inference were checked for every app candidate. Generated recordings, reports and model files remain ignored by Git.
