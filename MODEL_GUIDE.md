@@ -20,3 +20,13 @@ The mean benchmark is not counted among these ten learned methods. It predicts t
 The current mean benchmark is a reasonable population reference for testing new participants. A median predictor is another useful future MAE benchmark. For personal forecasting, a prior-rating or personal-history benchmark would be useful, but needs a separate time-ordered protocol and sufficient earlier ratings. Do not compute a personal average using a held-out person's future answers.
 
 Model settings are fixed before the final test. The comparison uses grouped development validation; only the selected model and mean benchmark are scored on the final test. This limits selecting a model because it happened to match the test answers. The same logic is described in [scikit-learn's cross-validation guide](https://scikit-learn.org/stable/modules/cross_validation.html).
+
+
+## Separate unsupervised experiment
+
+The schema-11 activity experiment starts with standardized K-means, k=2–4, selected
+on development silhouette only. It uses seven observed input rates and retains
+labels/ratings for evaluation, not inputs. See [CLUSTERING.md](CLUSTERING.md) and the
+machine-readable feature contract. Cluster structure/stability, independent fatigue
+prediction and intervention benefit are separate questions. Generated results do
+not establish any of those claims for real users.
