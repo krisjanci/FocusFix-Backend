@@ -61,3 +61,35 @@ is removed. Secure Input/mouse sensitivity and capture limitations remain releva
 API references: [StandardScaler](https://scikit-learn.org/1.5/modules/generated/sklearn.preprocessing.StandardScaler.html)
 and [KMeans](https://scikit-learn.org/1.5/modules/generated/sklearn.cluster.KMeans.html).
 These describe algorithms, not evidence that this application predicts fatigue.
+
+## Independent validation (separate from structural clustering)
+
+```sh
+uv run --python 3.13 python activity_validation.py demo \
+  --cluster-run /tmp/my-new-clustering-demo/population --output /tmp/my-new-validation
+```
+
+The default generated demo can legitimately report `insufficient_evidence`: two
+held-out participants do not meet the predeclared three-person technical gate.
+The evaluator compares a development-rating mean, fixed Ridge context/UTC-time/
+known-prior-declared-work baseline, and that baseline plus frozen cluster IDs.
+Later-time personal evaluation adds strictly earlier personal ratings with an
+explicit missing-history indicator. New-person evaluation never uses held-out
+people's ratings as personal calibration. Predictors stop before the request;
+future answer interaction or later label corrections cannot enter prior-work inputs.
+
+The real-data adapter requires schema-11 independent study prompt snapshots, a
+stable manifest and an exact reviewed schedule version. Legacy work-only ratings
+are not silently treated as independent cross-context measurements. Skips/missing
+answers remain missing. Whole preceding cluster windows must fit inside the prompt's
+recall bounds; misaligned/short windows are excluded and reported rather than
+extrapolated. Timing/recall-grid compatibility therefore needs prospective review.
+
+Outputs include joining exclusions, context-specific missingness, sample counts,
+eligible ratings and, only after technical gates pass, held-out comparisons and
+participant-resampled uncertainty where feasible. A single-person comparison cannot
+provide participant-level uncertainty. The gates are engineering minima, not a
+power calculation or sufficient statistical evidence. No candidates are chosen on
+final-test performance. Productivity is not evaluated here: neither input nor
+declared minutes establishes quality-adjusted output. No intervention benefit has
+been tested. See the private planning draft for unresolved protocol/reader decisions.
