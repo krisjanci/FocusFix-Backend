@@ -60,3 +60,28 @@ per projects ml
 The app now has its own ingestion/training/export workflow. See README.md for commands, MODEL_GUIDE.md for plain-language decisions, DATA_CATALOG.md for research data suitability, and VALIDATION.md for measured results. The original SWELL experiment remains available as train_swell.py.
 
 Five real local work check-ins were usable. The personal-session pilot selected the mean benchmark for both targets; more labelled data is needed before claiming accuracy. Synthetic data verifies the pipeline separately. Core ML conversion and native inference were checked for every app candidate. Generated recordings, reports and model files remain ignored by Git.
+
+## November 2, 2026 — separate local activity clustering
+
+I added a separate schema-11 clustering command instead of changing my existing
+supervised/SWELL pipelines. It uses nonoverlapping five-minute windows with complete
+observed normal-phase coverage. Observed stationary bins count; missing coverage,
+check-in interaction, breaks, return waiting and partial file-boundary windows do
+not become zero activity. Work/non-work/unknown remain evaluation metadata; the old
+work phase is never treated as a work label.
+
+I predeclared seven input rates and k=2–4. Scaling, candidate choice and stability
+checks use development data only. Population models hold out participants; personal
+models use only earlier days and hold out the last day. The saved model stays the
+development fit. Cluster IDs are stable within its version, with descriptive names,
+not fatigued/rested. Reports include exclusions, splits, profiles, coverage, constant
+features and bootstrap diagnostics. Synthetic data is clearly marked and is the
+CLI default; I did not open participant data.
+
+Generated end-to-end/leakage tests cover changed held-out values, mixed context,
+missing/no mouse observations, explicit breaks/check-ins, constant features, too
+little data, invalid schema, half-open events and personal time ordering. I found
+the existing .venv used Python 3.14/sklearn 1.9, so I created a separate /tmp Python
+3.13 environment from uv.lock (sklearn 1.5.2) for final checks without replacing it.
+The generated run is technical feasibility, not fatigue accuracy or intervention
+benefit. Device/task/participant confounding still needs independent evaluation.
