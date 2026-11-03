@@ -120,3 +120,15 @@ def test_half_open_event_cutoff_and_float32_rates():
                               distance_screen_points=[0] * 300, movement_events=[0] * 300))
     features = rate_features(events, mouse, 0, 300)
     assert features["keys_per_minute"] == float(np.float32(.4))
+
+
+def test_portable_swift_parity_fixture():
+    from pathlib import Path
+    fixture = json.loads((Path(__file__).parent / "fixtures/activity-rate-parity.json").read_text())
+    events = []
+    for kind, count in [("key_down", 108), ("delete_down", 12), ("left_click_down", 6), ("app_switch", 2), ("scroll", 5)]:
+        events.extend(dict(elapsed_seconds=index, event_type=kind, activity_phase="work") for index in range(count))
+    mouse = pd.DataFrame(dict(start_seconds=range(300), end_seconds=range(1, 301), activity_phase=["work"] * 300,
+        distance_screen_points=[3] * 300, movement_events=[2] * 150 + [1] * 150))
+    values = rate_features(pd.DataFrame(events), mouse, 0, 300)
+    assert [values[name] for name in FEATURES] == fixture["expected"]
