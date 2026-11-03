@@ -131,3 +131,12 @@ The demo creates deterministic synthetic app-format recordings, compares models 
 SWELL remains a separate workload experiment with participant-held-out evaluation and four original methods. It cannot be pooled with FocusFix labels or used as a fatigue/productivity model. Its models remain Python artifacts because the app has different feature definitions and labels.
 
 See [DATA_CATALOG.md](DATA_CATALOG.md) for candidate research data and [VALIDATION.md](VALIDATION.md) for the verified runs and current data limits.
+
+## Independent cluster evaluation and safe integration boundary
+
+`activity_validation.py` evaluates independent prompt-linked fatigue ratings against
+mean and context/time/prior-work baselines, with new-person and later-time protocols
+kept separate. It reports insufficient evidence for small samples and never equates
+cluster stability, fatigue prediction and intervention benefit. See [CLUSTERING.md](CLUSTERING.md).
+The app has only a disabled synthetic preview provider with exact seven-rate parity;
+its shipped timer remains active. No model, randomization or real collection is enabled.
