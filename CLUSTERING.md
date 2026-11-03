@@ -93,3 +93,10 @@ power calculation or sufficient statistical evidence. No candidates are chosen o
 final-test performance. Productivity is not evaluated here: neither input nor
 declared minutes establishes quality-adjusted output. No intervention benefit has
 been tested. See the private planning draft for unresolved protocol/reader decisions.
+
+Readable export directory names preserve `session.json` identity; the manifest maps
+that stable ID, not the exported folder's display name. Personal-history baselines
+require both the prior request and its answer to precede the current request, so a
+late answer cannot leak into an earlier prediction. Later context corrections stay
+out of prior-work inputs until their recorded action time. Final integrated checks
+use the repository's pinned Python 3.13 environment, preserving the old `.venv`.
