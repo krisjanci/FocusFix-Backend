@@ -132,3 +132,14 @@ def test_portable_swift_parity_fixture():
         distance_screen_points=[3] * 300, movement_events=[2] * 150 + [1] * 150))
     values = rate_features(pd.DataFrame(events), mouse, 0, 300)
     assert [values[name] for name in FEATURES] == fixture["expected"]
+
+
+def test_readable_export_names_preserve_stable_session_identity(generated):
+    source, manifest, original, _ = generated
+    folder = next(source.iterdir())
+    original_id = folder.name
+    exported = source / "FocusFix Session [2026-11-02 12-00-00-2026-11-02 12-30-00]"
+    folder.rename(exported)
+    table, _ = prepare_windows(source, manifest)
+    assert len(table) == len(original) and original_id in set(table.session_id)
+    assert exported.name not in set(table.session_id)
