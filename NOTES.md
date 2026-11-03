@@ -109,3 +109,21 @@ Experimental selection is off, with no real model or randomization activated. My
 private research-plan draft separates sparse independent validation from a later
 reviewed randomized comparison; it does not change the course contract or prior IRB
 draft. Cluster structure, fatigue prediction and benefit remain three different claims.
+
+## November 2, 2026 — final redesign regression audit
+
+I checked the existing supervised pipeline alongside the new generated activity
+experiments in the pinned Python 3.13/sklearn 1.5.2 environment. All 40 pytest tests
+passed, including native Core ML conversion/runtime parity, schema/window coverage,
+held-out fitting isolation, personal earlier-day splits and independent-rating
+comparisons. Native Core ML needed local compiler temporary access outside the
+sandbox. This verifies technical behavior, not useful real prediction accuracy.
+
+The audit fixed stable identity when an export folder has a readable name instead
+of its UUID, kept later label corrections out of prior-work predictors, and checked
+that personal ratings were answered before the current prompt (not merely requested
+earlier). Descriptive profile names now follow the observed feature means instead
+of assuming the first cluster means low activity. These remain synthetic results;
+real structural stability, independent fatigue improvement and intervention benefit
+are unestablished. The app's fixed policy and disabled research/experimental gates
+are unchanged. No participant data, service or billing was used or modified.
