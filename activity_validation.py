@@ -17,14 +17,21 @@ NUMERIC = ["hour_sin", "hour_cos", "prior_known_work_minutes", "prior_labels_una
 
 
 def read_study_ratings(source, manifest, schedule_version, allow_non_synthetic=False):
-    identities = pd.read_csv(manifest, dtype=str).set_index("session_id").participant_id.to_dict()
+    mapping = pd.read_csv(manifest, dtype=str, keep_default_na=False)
+    if not {"session_id", "participant_id"}.issubset(mapping.columns) or mapping.session_id.duplicated().any() or (mapping.participant_id == "").any():
+        raise ValueError("Independent validation needs unique sessions and stable participant pseudonyms")
+    identities = mapping.set_index("session_id").participant_id.to_dict()
     records = []
-    for folder in sorted(Path(source).glob("*/session.json")):
-        folder = folder.parent
+    source = Path(source)
+    folders = [source] if (source / "session.json").is_file() else sorted(path.parent for path in source.glob("*/session.json"))
+    for folder in folders:
+        if folder.is_symlink():
+            raise ValueError("Unsafe recording folder")
         metadata = json.loads(safe_read(folder, "session.json").read_text())
         if metadata.get("schema_version") != 11 or (not allow_non_synthetic and metadata.get("synthetic_fixture") is not True):
             raise ValueError("Independent validation defaults to generated schema-11 recordings")
-        if folder.name not in identities:
+        session_id = metadata.get("session_id", folder.name)
+        if session_id not in identities:
             raise ValueError("Missing stable participant pseudonym")
         prompts = {}
         log = folder / "study_check_ins.jsonl"
@@ -51,7 +58,7 @@ def read_study_ratings(source, manifest, schedule_version, allow_non_synthetic=F
                 raise ValueError("Missing/skipped ratings must stay missing")
             if np.isfinite(rating) and not (0 <= rating <= 10 and rating.is_integer()):
                 raise ValueError("Invalid independent fatigue rating")
-            records.append(dict(check_in_id=identifier, participant_id=identities[folder.name], session_id=folder.name,
+            records.append(dict(check_in_id=identifier, participant_id=identities[session_id], session_id=session_id,
                 status=status, fatigue=rating, context=prompt["contextAtPrompt"], request_elapsed=float(prompt["requestedElapsed"]),
                 recall_start=float(prompt["recallStart"]), recall_end=float(prompt["recallEnd"]),
                 request_utc=pd.Timestamp(float(prompt["requestedAtUTC"]), unit="s", tz="UTC").isoformat(),
@@ -67,6 +74,8 @@ def join_ratings(assignments, ratings):
     if ratings.check_in_id.duplicated().any():
         raise ValueError("Duplicate check-in ID")
     windows = assignments.copy()
+    if windows.window_id.duplicated().any() or not windows.split.isin(["development", "test"]).all():
+        raise ValueError("Duplicate windows or unsupported split assignments")
     windows["end_utc"] = pd.to_datetime(windows.start_utc, utc=True) + pd.to_timedelta(windows.end_seconds - windows.start_seconds, unit="s")
     for rating in ratings.sort_values(["request_utc", "check_in_id"]).itertuples():
         reason = None
@@ -99,7 +108,8 @@ def join_ratings(assignments, ratings):
         hour = request_date.hour + request_date.minute / 60
         rows.append(dict(check_in_id=rating.check_in_id, participant_id=rating.participant_id, request_utc=rating.request_utc,
             day=request_date.date().isoformat(), split=window.split, cluster_id=str(window.cluster_id), context=rating.context,
-            fatigue=float(rating.fatigue), window_id=window.window_id, window_end_seconds=window.end_seconds,
+            fatigue=float(rating.fatigue), answered_utc=(request_date + pd.to_timedelta(rating.answered_elapsed - rating.request_elapsed, unit="s")).isoformat(),
+            window_id=window.window_id, window_end_seconds=window.end_seconds,
             recall_end=rating.recall_end, request_elapsed=rating.request_elapsed, hour_sin=float(np.sin(2 * np.pi * hour / 24)),
             hour_cos=float(np.cos(2 * np.pi * hour / 24)), prior_known_work_minutes=prior,
             prior_labels_unavailable=int(len(previous) - len(known))))
@@ -114,7 +124,8 @@ def earlier_personal_ratings(table):
     result["prior_fatigue"] = 0.0; result["prior_rating_available"] = 0.0
     for _, group in result.groupby("participant_id"):
         for index, item in group.iterrows():
-            prior = group.loc[pd.to_datetime(group.request_utc, utc=True) < pd.Timestamp(item.request_utc), "fatigue"]
+            prior = group.loc[(pd.to_datetime(group.request_utc, utc=True) < pd.Timestamp(item.request_utc))
+                & (pd.to_datetime(group.answered_utc, utc=True) < pd.Timestamp(item.request_utc)), "fatigue"]
             if len(prior):
                 result.loc[index, "prior_fatigue"] = float(prior.mean())
                 result.loc[index, "prior_rating_available"] = 1.0
