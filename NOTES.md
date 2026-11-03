@@ -85,3 +85,27 @@ the existing .venv used Python 3.14/sklearn 1.9, so I created a separate /tmp Py
 3.13 environment from uv.lock (sklearn 1.5.2) for final checks without replacing it.
 The generated run is technical feasibility, not fatigue accuracy or intervention
 benefit. Device/task/participant confounding still needs independent evaluation.
+
+## November 2, 2026 — independent cluster validation
+
+I added a separate evaluator joining independent prompt IDs/context/recall bounds to
+preceding full-coverage windows. It compares a development mean, fixed context/UTC-
+time/known-prior-work baseline and that baseline plus cluster IDs. Later-time personal
+features use only strictly earlier ratings; new-person predictions do not calibrate
+on held-out people's answers. Later history corrections are excluded from prior-work
+features when they were not available at the prompt. Missing/skip ratings stay missing.
+
+I predeclared technical sample gates, report missingness by context and use participant
+resampling for new-person uncertainty when feasible. These gates do not establish
+statistical adequacy. The small six-person generated demo reports insufficient
+evidence because it has only two held-out people; it does not print an accuracy claim.
+Larger generated tests exercise all three models, later-time ordering and unchanged
+training-mean predictions after held-out changes. Productivity evaluation stays separate.
+
+The app's synthetic provider reproduces the seven-rate float32 contract, checks
+versions/coverage/model age and falls back to the existing fixed policy for unknown,
+missing or ineligible input. It returns descriptive cluster IDs, never fatigue scores.
+Experimental selection is off, with no real model or randomization activated. My
+private research-plan draft separates sparse independent validation from a later
+reviewed randomized comparison; it does not change the course contract or prior IRB
+draft. Cluster structure, fatigue prediction and benefit remain three different claims.
