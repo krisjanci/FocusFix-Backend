@@ -63,9 +63,10 @@ def load_recording(folder, participant, allow_non_synthetic=False):
         UUID(contract[contract_key])
         if metadata.get(metadata_key) != contract[contract_key]:
             raise ValueError("Recording/segment identity mismatch")
-    if metadata.get("session_id") != folder.name or metadata.get("recording_mode") != contract.get("mode") or contract.get("mode") not in {"manual", "automatic"}:
+    UUID(metadata["session_id"])
+    if metadata.get("recording_mode") != contract.get("mode") or contract.get("mode") not in {"manual", "automatic"}:
         raise ValueError("Session/mode identity mismatch")
-    origin, end = finite(contract["elapsedOrigin"], "origin"), finite(contract["observedThrough"], "end")
+    origin, end = finite(contract.get("elapsedOrigin", 0), "origin"), finite(contract["observedThrough"], "end")
     if origin < 0 or end <= origin or abs(finite(metadata.get("duration_seconds"), "duration") - (end - origin)) > 1e-6:
         raise ValueError("Invalid recording bounds")
     previous, ids = origin, set()
@@ -74,7 +75,10 @@ def load_recording(folder, participant, allow_non_synthetic=False):
         lower, upper = finite(label["start"], "label start"), finite(label["end"], "label end")
         if label["id"] in ids or lower < previous or upper <= lower or upper > end or label["context"] not in CONTEXTS:
             raise ValueError("Overlapping or malformed context interval")
-        finite(label["effectiveAtUTC"], "effective UTC"); finite(label["recordedAtUTC"], "recorded UTC")
+        for field in ["effectiveAtUTC", "recordedAtUTC"]:
+            if isinstance(label[field], str):
+                label[field] = iso_date(label[field]).timestamp()
+            finite(label[field], field)
         if label["source"] not in {"manual_start", "automatic_default", "user_action", "history_edit", "notification", "lifecycle"}:
             raise ValueError("Unsupported label provenance")
         ids.add(label["id"]); previous = upper
@@ -151,13 +155,14 @@ def prepare_windows(source, manifest, allow_non_synthetic=False):
     rows, audit = [], []
     seen_segments = set()
     for folder in folders:
-        if folder.name not in identities:
+        metadata, contract, events, mouse, breaks, started, zone = load_recording(folder, None, allow_non_synthetic)
+        session_id = metadata["session_id"]
+        if session_id not in identities:
             raise ValueError("Every recording needs a stable manifest identity")
-        metadata, contract, events, mouse, breaks, started, zone = load_recording(folder, identities[folder.name], allow_non_synthetic)
         if contract["segmentID"] in seen_segments:
             raise ValueError("Duplicate segment cannot duplicate windows")
         seen_segments.add(contract["segmentID"])
-        origin, end = contract["elapsedOrigin"], contract["observedThrough"]
+        origin, end = contract.get("elapsedOrigin", 0), contract["observedThrough"]
         checkins, open_checkin = [], None
         for item in events.sort_values("elapsed_seconds").itertuples():
             if item.event_type == "check_in_start":
@@ -170,7 +175,7 @@ def prepare_windows(source, manifest, allow_non_synthetic=False):
             checkins.append((open_checkin, end))
         lower = math.ceil(origin / WINDOW_SECONDS) * WINDOW_SECONDS
         if lower > origin:
-            audit.append(dict(session_id=folder.name, reason="partial_boundary", start=origin, end=lower))
+            audit.append(dict(session_id=session_id, reason="partial_boundary", start=origin, end=lower))
         while lower + WINDOW_SECONDS <= end + 1e-6:
             upper = lower + WINDOW_SECONDS
             reason = None
@@ -180,7 +185,7 @@ def prepare_windows(source, manifest, allow_non_synthetic=False):
                 reason = "check_in_or_awaiting_return"
             features = None if reason else rate_features(events, mouse, lower, upper)
             if features is None:
-                audit.append(dict(session_id=folder.name, reason=reason or "insufficient_observed_coverage", start=lower, end=upper))
+                audit.append(dict(session_id=session_id, reason=reason or "insufficient_observed_coverage", start=lower, end=upper))
             else:
                 fractions = {context: 0.0 for context in CONTEXTS}
                 for label in contract["intervals"]:
@@ -188,17 +193,17 @@ def prepare_windows(source, manifest, allow_non_synthetic=False):
                 fractions["unknown"] += max(0, 1 - sum(fractions.values()))
                 context = next((key for key, value in fractions.items() if value >= 1 - 1e-6), "mixed")
                 utc = started + timedelta(seconds=lower - origin)
-                rows.append(dict(window_id=f"{contract['segmentID']}:{lower:g}", session_id=folder.name,
-                    recording_id=contract["recordingID"], segment_id=contract["segmentID"], participant_id=identities[folder.name],
+                rows.append(dict(window_id=f"{contract['segmentID']}:{lower:g}", session_id=session_id,
+                    recording_id=contract["recordingID"], segment_id=contract["segmentID"], participant_id=identities[session_id],
                     start_seconds=lower, end_seconds=upper, start_utc=utc.isoformat(), day=utc.astimezone(zone).date().isoformat(),
                     context=context, work_fraction=fractions["work"], non_work_fraction=fractions["non_work"], unknown_fraction=fractions["unknown"],
                     synthetic=metadata.get("synthetic_fixture") is True, coverage_fraction=1.0,
                     labels_recorded_at_utc=max((label["recordedAtUTC"] for label in contract["intervals"]
                         if max(lower, label["start"]) < min(upper, label["end"])), default=started.timestamp()), **features))
-                audit.append(dict(session_id=folder.name, reason="included", start=lower, end=upper))
+                audit.append(dict(session_id=session_id, reason="included", start=lower, end=upper))
             lower = upper
         if lower < end:
-            audit.append(dict(session_id=folder.name, reason="partial_boundary", start=lower, end=end))
+            audit.append(dict(session_id=session_id, reason="partial_boundary", start=lower, end=end))
     if not folders:
         raise ValueError("No schema-11 recording folders found")
     return pd.DataFrame(rows), audit
@@ -270,7 +275,17 @@ def fit_clusters(table, output, mode="unseen"):
         labelled_dev = table.loc[table.split == "development"]
         for cluster_id, group in labelled_dev.groupby("cluster_id"):
             means = group[FEATURES].mean()
-            name = "low observed input" if int(cluster_id) == 0 else "frequent typing" if means.keys_per_minute >= labelled_dev.keys_per_minute.median() else "more pointer activity"
+            medians = labelled_dev[FEATURES].median()
+            if all(means[name] <= medians[name] for name in FEATURES):
+                name = "low observed input"
+            elif means.keys_per_minute > 0 and means.keys_per_minute >= medians.keys_per_minute:
+                name = "frequent typing"
+            elif means.mouse_events_per_minute > 0 and means.mouse_events_per_minute >= medians.mouse_events_per_minute:
+                name = "more pointer activity"
+            elif means.scrolls_per_minute > 0:
+                name = "observed scrolling"
+            else:
+                name = "mixed observed input"
             profiles.append(dict(cluster_id=int(cluster_id), description=name, windows=len(group), means=means.to_dict(),
                 evaluation_context_counts=group.context.value_counts().to_dict(), participant_counts=group.participant_id.value_counts().to_dict()))
         report.update(status="technical_fit_only", model_version=model_version, selected_k=k,
