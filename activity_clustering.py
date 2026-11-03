@@ -192,7 +192,9 @@ def prepare_windows(source, manifest, allow_non_synthetic=False):
                     recording_id=contract["recordingID"], segment_id=contract["segmentID"], participant_id=identities[folder.name],
                     start_seconds=lower, end_seconds=upper, start_utc=utc.isoformat(), day=utc.astimezone(zone).date().isoformat(),
                     context=context, work_fraction=fractions["work"], non_work_fraction=fractions["non_work"], unknown_fraction=fractions["unknown"],
-                    synthetic=metadata.get("synthetic_fixture") is True, coverage_fraction=1.0, **features))
+                    synthetic=metadata.get("synthetic_fixture") is True, coverage_fraction=1.0,
+                    labels_recorded_at_utc=max((label["recordedAtUTC"] for label in contract["intervals"]
+                        if max(lower, label["start"]) < min(upper, label["end"])), default=started.timestamp()), **features))
                 audit.append(dict(session_id=folder.name, reason="included", start=lower, end=upper))
             lower = upper
         if lower < end:
