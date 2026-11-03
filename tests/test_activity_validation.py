@@ -115,3 +115,15 @@ def test_study_adapter_preserves_zero_and_missing_with_exact_schedule(tmp_path):
     (folder / "session.json").write_text(json.dumps(dict(schema_version=11, synthetic_fixture=False)))
     with pytest.raises(ValueError, match="reviewed study scope"):
         read_study_ratings(tmp_path / "recordings", tmp_path / "manifest.csv", "synthetic.v1", True)
+
+
+
+def test_late_answers_are_unavailable_to_earlier_personal_predictions():
+    windows = assignments(people=1, days=1, windows=4)
+    ratings = synthetic_ratings(windows)
+    table, _ = join_ratings(windows, ratings)
+    table = table.sort_values("request_utc").reset_index(drop=True)
+    table.loc[0, "answered_utc"] = "2027-01-01T00:00:00+00:00"
+    features = earlier_personal_ratings(table)
+    assert features.loc[1, "prior_rating_available"] == 0
+    assert features.loc[2, "prior_fatigue"] == table.loc[1, "fatigue"]
