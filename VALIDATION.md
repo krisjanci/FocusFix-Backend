@@ -48,3 +48,17 @@ This reproduces the earlier finding: those four aggregate activity features do n
 ## What remains before app deployment
 
 Collect more varied, labelled work sessions and participants. Keep participant identity consistent across sessions. Run a new experiment with enough untouched data to assess useful error, and reproduce the versioned feature contract in the app before adding the selected `.mlmodel`. A good synthetic score or a successful export does not replace those steps. The backend intentionally reports `deployment_ready: false`.
+
+## November 2, 2026 — separate automatic-format experiments
+
+The integrated pinned Python 3.13 / sklearn 1.5.2 suite passed 40 tests, including
+the original supervised/Core ML checks and new schema-11 clustering, independent
+ratings, held-out/time-order and portable Swift-feature fixture checks. Everything
+used generated fixtures. The small clustering/validation demo reports insufficient
+evidence with only two held-out people. A larger synthetic test verifies benchmark
+comparison and participant resampling, not useful real fatigue accuracy.
+
+Real cluster stability, real fatigue prediction improvement and intervention benefit
+remain three distinct unestablished claims. No study activation, participant access,
+randomization, model deployment or live-service change occurred. See CLUSTERING.md
+and the app's redesign-readiness/manual-qualification documents for current limits.
