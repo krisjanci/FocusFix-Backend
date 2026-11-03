@@ -1,3 +1,12 @@
+## Separate automatic-recording clustering experiment
+
+[CLUSTERING.md](CLUSTERING.md) documents the independent schema-11, generated-data
+pipeline. It builds full-coverage five-minute windows, fits development-only
+standardized K-means, and keeps activity labels/ratings out of clustering inputs.
+Unseen-person and personal later-day models are separate. No cluster is named or
+validated as fatigued/rested. The existing supervised pipeline below is unchanged
+and remains work-only, supporting its original schema contract.
+
 # FocusFix Backend
 
 Train experimental models from FocusFix recordings and export Apple **Core ML** `.mlmodel` files for later use in the app. All processing runs locally. Nothing uploads recordings, contacts Supabase, or modifies the app.
