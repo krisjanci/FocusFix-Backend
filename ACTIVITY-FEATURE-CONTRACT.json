@@ -1,0 +1,21 @@
+{
+  "feature_version": "focusfix_activity_rates_v1",
+  "recording_schema": 11,
+  "recording_format": "focusfix.recording.v11",
+  "window_seconds": 300,
+  "alignment": "non-overlapping logical-recording multiples of 300; no joining partial file boundaries",
+  "intervals": "half-open [start,end); event at end excluded",
+  "coverage": "300 observed normal-phase seconds from non-overlapping complete mouse bins, including stationary bins; 0.00001 second total rounding tolerance",
+  "exclusions": ["any explicit break", "check-in interaction", "awaiting return", "capture gaps", "partial segment windows", "uncheckpointed crash tails"],
+  "features": ["keys_per_minute", "deletes_per_minute", "clicks_per_minute", "switches_per_minute", "scrolls_per_minute", "mouse_points_per_minute", "mouse_events_per_minute"],
+  "calculation": "each count or sum times 60 / observed seconds, rounded to float32 then stored as Double",
+  "keys": "key_down plus delete_down including repeats; deletes are not counted twice",
+  "clicks": "left/right/other click_down only",
+  "mouse": "screen-coordinate points and observed movement callback counts; not physical distance",
+  "imputation": "none; insufficient coverage excludes the window, not zero activity",
+  "metadata_only": ["identity", "context", "ratings", "UTC/time of day", "work fraction", "future break information"],
+  "candidate_k": [2, 3, 4],
+  "selection": "development-only standardized K-means, development silhouette; smaller k wins ties",
+  "stable_ids": "centroid lexicographic order within one model version; meanings not assumed stable after retraining",
+  "deployment_ready": false
+}
